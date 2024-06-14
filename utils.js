@@ -35,10 +35,26 @@ let _isAppStateAvailable = AppState.currentState !== null;
 
 type AppStateStatus = typeof AppState.currentState;
 
+/**
+ * Remove the existing _linkingEventSubscription if it exists and sets _redirectHandler to null.
+ * This ensures that any previous handlers are cleared before setting a new one.
+ */
+function clearRedirectHandler() {
+  if (_linkingEventSubscription) {
+    _linkingEventSubscription.remove();
+    _linkingEventSubscription = null;
+  }
+  _redirectHandler = null;
+}
+
 function waitForRedirectAsync(returnUrl: string): Promise<RedirectResult> {
   return new Promise(function (resolve) {
+     // Clear any existing handlers
+    clearRedirectHandler();
+
     _redirectHandler = (event: RedirectEvent) => {
       if (event.url && event.url.startsWith(returnUrl)) {
+        clearRedirectHandler();
         resolve({ url: event.url, type: 'success' });
       }
     };
